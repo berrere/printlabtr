@@ -3,15 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrintLab 3D | Admin Dashboard - JSONBin.io Entegre</title>
+    <title>PrintLab 3D | Admin Dashboard - Kuponlu Ürünler Yönetimi</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: #f0f2f5; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
+        .container { max-width: 1600px; margin: 0 auto; }
         .header { background: linear-gradient(135deg, #1e3a4d, #2c7da0); color: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        
+        /* İki sütunlu layout - Ana içerik + Sağ sidebar */
+        .dashboard-layout { display: flex; gap: 20px; }
+        .main-content { flex: 2; }
+        .sidebar { flex: 1; }
+        
+        @media (max-width: 1000px) { .dashboard-layout { flex-direction: column; } }
+        
         .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .card h2 { margin-bottom: 15px; color: #1e3a4d; border-left: 4px solid #2c7da0; padding-left: 12px; }
         .form-group { margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
@@ -21,68 +28,111 @@
         button:hover { background: #1f5e7a; transform: scale(0.98); }
         .btn-danger { background: #e74c3c; }
         .btn-success { background: #27ae60; }
+        .btn-warning { background: #f39c12; }
+        
+        /* Kuponlu Ürünler Listesi */
+        .coupon-product-item { background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 15px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .coupon-product-img { width: 80px; height: 80px; background: #e0e0e0; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+        .coupon-product-info { flex: 1; }
+        .coupon-product-price { font-size: 1.3rem; font-weight: 700; color: #27ae60; }
+        .delete-product-btn { background: #e74c3c; padding: 5px 12px; font-size: 12px; }
+        
         .order-status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
         .status-pending { background: #f39c12; color: white; }
-        .status-approved { background: #3498db; color: white; }
-        .status-printing { background: #9b59b6; color: white; }
-        .status-packaging { background: #1abc9c; color: white; }
-        .status-ready { background: #2ecc71; color: white; }
-        .status-shipped { background: #e67e22; color: white; }
-        .status-delivered { background: #27ae60; color: white; }
-        .status-cancelled { background: #e74c3c; color: white; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
         .tracking-code { font-family: monospace; font-size: 12px; background: #f0f0f0; padding: 4px 8px; border-radius: 6px; }
-        .balance { font-size: 24px; font-weight: 800; color: #27ae60; }
+        
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; border-radius: 16px; padding: 24px; max-width: 500px; width: 90%; }
-        .sync-status { position: fixed; bottom: 20px; right: 20px; background: #27ae60; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 1000; }
-        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
-        .loading { opacity: 0.6; pointer-events: none; }
+        .sync-status { position: fixed; bottom: 20px; right: 20px; background: #27ae60; color: white; padding: 8px 16px; border-radius: 30px; font-size: 12px; z-index: 1000; }
+        
+        /* Kargo ve KDV Ayarları */
+        .settings-box { background: #e8f4f8; border-radius: 12px; padding: 15px; margin-top: 15px; }
+        .settings-box h3 { font-size: 1rem; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
-        <h1><i class="fas fa-cube"></i> PrintLab 3D | Admin Dashboard</h1>
-        <p>JSONBin.io Bulut Veritabanı | Sipariş Yönetimi | Müşteri Bakiyesi</p>
+        <h1><i class="fas fa-cube"></i> PrintLab 3D | Admin Dashboard Pro</h1>
+        <p>Kuponlu Ürünler Yönetimi | Kargo & KDV Ayarları | Sipariş Takibi</p>
     </div>
 
-    <div class="grid-2">
-        <div class="card">
-            <h2><i class="fas fa-plus-circle"></i> Yeni Sipariş Oluştur</h2>
-            <div class="form-group"><label>Müşteri Adı</label><input type="text" id="custName" placeholder="Ad Soyad"></div>
-            <div class="form-group"><label>Telefon / Email</label><input type="text" id="custContact" placeholder="Telefon veya Email"></div>
-            <div class="form-group"><label>Ürün Adı</label><input type="text" id="productName" placeholder="Ürün"></div>
-            <div class="form-group"><label>Tutar (₺)</label><input type="number" id="orderAmount" placeholder="0"></div>
-            <div class="form-group"><label>Tahmini Süre (gün)</label><input type="number" id="estimatedDays" value="3"></div>
-            <div class="form-group"><label>İndirim Kullan</label><select id="useDiscount"><option value="0">Hayır</option><option value="1">Evet (Müşteri bakiyesinden)</option></select></div>
-            <button id="createOrderBtn"><i class="fas fa-save"></i> Sipariş Oluştur & Takip Kodu Üret</button>
-            <div id="orderResult" style="margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 8px; display: none;"></div>
-        </div>
-
-        <div class="card">
-            <h2><i class="fas fa-users"></i> Müşteri Yönetimi & Bakiye</h2>
-            <div class="form-group"><label>Müşteri Ara</label><input type="text" id="searchCustomer" placeholder="İsim veya Telefon"></div>
-            <div id="customerInfo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;">
-                <p>Müşteri seçin veya yeni sipariş oluşturun</p>
+    <div class="dashboard-layout">
+        <!-- ANA İÇERİK SOL TARAF -->
+        <div class="main-content">
+            <!-- Sipariş Oluştur -->
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Yeni Sipariş Oluştur</h2>
+                <div class="form-group"><label>Müşteri Adı</label><input type="text" id="custName" placeholder="Ad Soyad"></div>
+                <div class="form-group"><label>Telefon / Email</label><input type="text" id="custContact" placeholder="Telefon veya Email"></div>
+                <div class="form-group"><label>Ürün Adı</label><input type="text" id="productName" placeholder="Ürün"></div>
+                <div class="form-group"><label>Tutar (₺)</label><input type="number" id="orderAmount" placeholder="0"></div>
+                <div class="form-group"><label>Tahmini Süre (gün)</label><input type="number" id="estimatedDays" value="3"></div>
+                <button id="createOrderBtn"><i class="fas fa-save"></i> Sipariş Oluştur & Takip Kodu Üret</button>
+                <div id="orderResult" style="margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 8px; display: none;"></div>
             </div>
-            <button id="addBalanceBtn" class="btn-success" style="margin-top: 10px;"><i class="fas fa-plus-circle"></i> Bakiye Ekle/Arttır</button>
-            <button id="refreshDataBtn"><i class="fas fa-sync"></i> JSONBin.io'dan Yenile</button>
-        </div>
-    </div>
 
-    <div class="card">
-        <h2><i class="fas fa-list"></i> Tüm Siparişler</h2>
-        <div style="overflow-x: auto;">
-            <table id="ordersTable">
-                <thead><tr><th>Takip Kodu</th><th>Müşteri</th><th>Ürün</th><th>Tutar</th><th>Durum</th><th>İşlemler</th></tr></thead>
-                <tbody id="ordersList"></tbody>
-            </table>
+            <!-- Sipariş Listesi -->
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Tüm Siparişler</h2>
+                <div style="overflow-x: auto;">
+                    <table id="ordersTable">
+                        <thead><tr><th>Takip Kodu</th><th>Müşteri</th><th>Ürün</th><th>Tutar</th><th>Durum</th><th>İşlemler</th></tr></thead>
+                        <tbody id="ordersList"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAĞ SIDEBAR - KUPONLU ÜRÜNLER -->
+        <div class="sidebar">
+            <!-- Kuponlu Ürünler Ekleme -->
+            <div class="card">
+                <h2><i class="fas fa-ticket-alt"></i> 🏷️ Kuponlu Ürün Ekle</h2>
+                <div class="form-group"><label>Ürün Adı</label><input type="text" id="couponProductName" placeholder="Örn: Premium Ejderha"></div>
+                <div class="form-group"><label>Fiyat (₺)</label><input type="number" id="couponProductPrice" placeholder="0"></div>
+                <div class="form-group"><label>Resim / İkon</label><input type="text" id="couponProductImage" placeholder="Emoji veya FontAwesome (🐉 / fa-dragon)"></div>
+                <div class="form-group"><label>Açıklama</label><textarea id="couponProductDesc" rows="2" placeholder="Ürün açıklaması..."></textarea></div>
+                <button id="addCouponProductBtn" class="btn-success"><i class="fas fa-plus"></i> Kuponlu Ürün Ekle</button>
+            </div>
+
+            <!-- Kuponlu Ürünler Listesi -->
+            <div class="card">
+                <h2><i class="fas fa-gift"></i> 🎁 Kuponla Alınabilecek Ürünler</h2>
+                <div id="couponProductsList"></div>
+            </div>
+
+            <!-- Kargo ve KDV Ayarları -->
+            <div class="card">
+                <h2><i class="fas fa-truck"></i> Kargo & KDV Ayarları</h2>
+                <div class="settings-box">
+                    <div class="form-group"><label>Standart Kargo (₺)</label><input type="number" id="shippingCostSetting" value="45" step="5"></div>
+                    <div class="form-group"><label>Ekspres Kargo (₺)</label><input type="number" id="expressShippingCost" value="85" step="5"></div>
+                    <div class="form-group"><label>KDV Oranı (%)</label><input type="number" id="taxRateSetting" value="18" step="1"></div>
+                    <button id="saveShippingSettings" class="btn-primary"><i class="fas fa-save"></i> Ayarları Kaydet</button>
+                    <div class="info-message" style="margin-top: 10px; font-size: 12px; background: #fff3cd; padding: 8px; border-radius: 8px;">
+                        <i class="fas fa-info-circle"></i> Not: Kargo ve KDV ücretleri müşteriye yansıtılacaktır.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Müşteri Yönetimi -->
+            <div class="card">
+                <h2><i class="fas fa-users"></i> Müşteri Yönetimi</h2>
+                <div class="form-group"><label>Müşteri Ara</label><input type="text" id="searchCustomer" placeholder="İsim veya Telefon"></div>
+                <div id="customerInfo" style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 10px;">
+                    <p>Müşteri seçin veya yeni sipariş oluşturun</p>
+                </div>
+                <button id="addBalanceBtn" class="btn-success"><i class="fas fa-plus-circle"></i> Bakiye Ekle</button>
+                <button id="refreshDataBtn"><i class="fas fa-sync"></i> Yenile</button>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Durum Güncelleme Modal -->
 <div id="statusModal" class="modal">
     <div class="modal-content">
         <h3>Sipariş Durumu Güncelle</h3>
@@ -104,105 +154,112 @@
 <div class="sync-status" id="syncStatus">🔄 JSONBin.io Bağlanıyor...</div>
 
 <script>
-    // ============ JSONBin.io KONFİGÜRASYONU ============
+    // JSONBin.io Konfigürasyonu
     const JSONBIN_API_KEY = "$2a$10$f2TAysXUZVVJuURIPehcd.PCfD3lyFn/3/QcNSyovFLrtsooQqCrq";
     const JSONBIN_BIN_ID = "6a21a9a1f5f4af5e29b927a2";
     
-    let customers = [];
-    let orders = [];
-    let isLoading = false;
+    let customers = [], orders = [], couponProducts = [];
+    let shippingSettings = { standard: 45, express: 85, taxRate: 18 };
     
-    // JSONBin.io'dan veri çek
+    // Yükleme
     async function loadFromJSONBin() {
-        if(isLoading) return;
-        isLoading = true;
-        document.getElementById('syncStatus').innerHTML = "🔄 Veri çekiliyor...";
-        document.getElementById('syncStatus').style.background = "#f39c12";
-        
         try {
             const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
-                method: 'GET',
-                headers: {
-                    'X-Master-Key': JSONBIN_API_KEY,
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'X-Master-Key': JSONBIN_API_KEY }
             });
-            
             if(response.ok) {
                 const data = await response.json();
                 if(data.record) {
                     customers = data.record.customers || [];
                     orders = data.record.orders || [];
-                    document.getElementById('syncStatus').innerHTML = "✅ Veri yüklendi!";
-                    document.getElementById('syncStatus').style.background = "#27ae60";
-                    renderOrdersTable();
-                    setTimeout(() => {
-                        document.getElementById('syncStatus').style.opacity = "0.5";
-                    }, 2000);
-                } else {
-                    // İlk kez oluştur
-                    customers = [];
-                    orders = [];
-                    await saveToJSONBin();
+                    couponProducts = data.record.couponProducts || [];
+                    shippingSettings = data.record.shippingSettings || { standard: 45, express: 85, taxRate: 18 };
+                    document.getElementById('shippingCostSetting').value = shippingSettings.standard;
+                    document.getElementById('expressShippingCost').value = shippingSettings.express;
+                    document.getElementById('taxRateSetting').value = shippingSettings.taxRate;
                 }
-            } else {
-                throw new Error("Veri çekilemedi");
             }
-        } catch(error) {
-            console.error("JSONBin hatası:", error);
-            document.getElementById('syncStatus').innerHTML = "⚠️ Yerel mod (Offline)";
-            document.getElementById('syncStatus').style.background = "#e74c3c";
-            // Yerel storage'dan dene
-            const localCustomers = localStorage.getItem('printlab_customers_backup');
-            const localOrders = localStorage.getItem('printlab_orders_backup');
-            if(localCustomers) customers = JSON.parse(localCustomers);
-            if(localOrders) orders = JSON.parse(localOrders);
-            if(customers.length === 0) {
-                customers = [
-                    { id: 1, name: "Ahmet Yılmaz", contact: "ahmet@email.com", balance: 50, createdAt: new Date().toISOString() },
-                    { id: 2, name: "Mehmet Demir", contact: "5551234567", balance: 25, createdAt: new Date().toISOString() }
-                ];
-                orders = [
-                    { id: 101, trackingCode: "PL3D-A1B2C3", customerId: 1, customerName: "Ahmet Yılmaz", product: "Ejderha Heykeli", amount: 450, status: "basiliyor", estimatedDays: 3, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-                ];
-            }
-            renderOrdersTable();
-        }
-        isLoading = false;
+        } catch(e) { console.error("JSONBin hatası:", e); }
+        renderCouponProductsList();
+        renderOrdersTable();
+        document.getElementById('syncStatus').innerHTML = "✅ Bağlandı";
+        setTimeout(() => { document.getElementById('syncStatus').style.opacity = "0.5"; }, 2000);
     }
     
-    // JSONBin.io'ya kaydet
     async function saveToJSONBin() {
-        const dataToSave = { customers, orders, lastUpdated: new Date().toISOString() };
-        
-        // Yedekle
-        localStorage.setItem('printlab_customers_backup', JSON.stringify(customers));
-        localStorage.setItem('printlab_orders_backup', JSON.stringify(orders));
-        
+        const dataToSave = { customers, orders, couponProducts, shippingSettings };
         try {
-            const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+            await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
                 method: 'PUT',
-                headers: {
-                    'X-Master-Key': JSONBIN_API_KEY,
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'X-Master-Key': JSONBIN_API_KEY, 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSave)
             });
-            
-            if(response.ok) {
-                document.getElementById('syncStatus').innerHTML = "✅ Kaydedildi!";
-                document.getElementById('syncStatus').style.background = "#27ae60";
-                setTimeout(() => {
-                    document.getElementById('syncStatus').style.opacity = "0.5";
-                }, 1500);
-                return true;
-            }
-        } catch(error) {
-            console.error("Kayıt hatası:", error);
-            document.getElementById('syncStatus').innerHTML = "⚠️ Yerel kaydedildi";
-        }
-        return false;
+        } catch(e) { console.error("Kayıt hatası:", e); }
     }
+    
+    // Kuponlu Ürün Ekleme
+    document.getElementById('addCouponProductBtn').addEventListener('click', async () => {
+        const name = document.getElementById('couponProductName').value.trim();
+        const price = parseFloat(document.getElementById('couponProductPrice').value);
+        const image = document.getElementById('couponProductImage').value.trim() || "🎁";
+        const desc = document.getElementById('couponProductDesc').value.trim();
+        
+        if(!name || isNaN(price)) { alert("Ürün adı ve fiyat giriniz!"); return; }
+        
+        const newProduct = {
+            id: Date.now(),
+            name: name,
+            price: price,
+            image: image,
+            description: desc || "Kupon ile avantajlı fiyat!",
+            createdAt: new Date().toISOString()
+        };
+        couponProducts.push(newProduct);
+        await saveToJSONBin();
+        renderCouponProductsList();
+        document.getElementById('couponProductName').value = '';
+        document.getElementById('couponProductPrice').value = '';
+        document.getElementById('couponProductImage').value = '';
+        document.getElementById('couponProductDesc').value = '';
+        alert("Ürün eklendi!");
+    });
+    
+    function renderCouponProductsList() {
+        const container = document.getElementById('couponProductsList');
+        if(couponProducts.length === 0) {
+            container.innerHTML = '<p style="color: #999;">Henüz kuponlu ürün eklenmemiş.</p>';
+            return;
+        }
+        container.innerHTML = couponProducts.map(p => `
+            <div class="coupon-product-item">
+                <div class="coupon-product-img">${p.image.includes('fa-') ? `<i class="fas ${p.image} fa-2x"></i>` : (p.image.length < 5 ? p.image : '📦')}</div>
+                <div class="coupon-product-info">
+                    <div><strong>${p.name}</strong></div>
+                    <div class="coupon-product-price">${p.price.toFixed(2)} ₺</div>
+                    <small>${p.description}</small>
+                </div>
+                <button class="delete-product-btn" data-id="${p.id}"><i class="fas fa-trash"></i> Sil</button>
+            </div>
+        `).join('');
+        
+        document.querySelectorAll('.delete-product-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const id = parseInt(btn.dataset.id);
+                couponProducts = couponProducts.filter(p => p.id !== id);
+                await saveToJSONBin();
+                renderCouponProductsList();
+            });
+        });
+    }
+    
+    // Kargo Ayarlarını Kaydet
+    document.getElementById('saveShippingSettings').addEventListener('click', async () => {
+        shippingSettings.standard = parseFloat(document.getElementById('shippingCostSetting').value) || 45;
+        shippingSettings.express = parseFloat(document.getElementById('expressShippingCost').value) || 85;
+        shippingSettings.taxRate = parseFloat(document.getElementById('taxRateSetting').value) || 18;
+        await saveToJSONBin();
+        alert("Kargo ve KDV ayarları kaydedildi!");
+    });
     
     // Rastgele takip kodu üret
     function generateTrackingCode() {
@@ -212,7 +269,6 @@
         return code;
     }
     
-    // Müşteri bul veya oluştur
     function findOrCreateCustomer(name, contact) {
         let customer = customers.find(c => c.name.toLowerCase() === name.toLowerCase() || c.contact === contact);
         if(!customer) {
@@ -223,11 +279,9 @@
         return customer;
     }
     
-    // Sipariş oluştur
     async function createOrder(customer, productName, amount, estimatedDays, useDiscount) {
         let finalAmount = amount;
         let discountApplied = 0;
-        
         if(useDiscount && customer.balance > 0) {
             discountApplied = Math.min(customer.balance, amount);
             finalAmount = amount - discountApplied;
@@ -235,56 +289,30 @@
             const customerIndex = customers.findIndex(c => c.id === customer.id);
             if(customerIndex !== -1) customers[customerIndex].balance = customer.balance;
         }
-        
         const newId = orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 1;
         const trackingCode = generateTrackingCode();
-        
         const newOrder = {
-            id: newId,
-            trackingCode: trackingCode,
-            customerId: customer.id,
-            customerName: customer.name,
-            product: productName,
-            amount: finalAmount,
-            originalAmount: amount,
-            discountApplied: discountApplied,
-            status: "beklemede",
-            estimatedDays: estimatedDays,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            id: newId, trackingCode: trackingCode, customerId: customer.id, customerName: customer.name,
+            product: productName, amount: finalAmount, originalAmount: amount, discountApplied: discountApplied,
+            status: "beklemede", estimatedDays: estimatedDays, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
         };
-        
         orders.push(newOrder);
         await saveToJSONBin();
-        
         return { newOrder, discountApplied };
     }
     
-    // Durumu güncelle
     async function updateOrderStatus(orderId, newStatus) {
         const orderIndex = orders.findIndex(o => o.id === orderId);
-        if(orderIndex !== -1) {
-            orders[orderIndex].status = newStatus;
-            orders[orderIndex].updatedAt = new Date().toISOString();
-            await saveToJSONBin();
-            renderOrdersTable();
-            return true;
-        }
+        if(orderIndex !== -1) { orders[orderIndex].status = newStatus; orders[orderIndex].updatedAt = new Date().toISOString(); await saveToJSONBin(); renderOrdersTable(); return true; }
         return false;
     }
     
-    // Bakiye ekle
     async function addBalance(customerId, amount) {
         const customerIndex = customers.findIndex(c => c.id === customerId);
-        if(customerIndex !== -1) {
-            customers[customerIndex].balance += amount;
-            await saveToJSONBin();
-            return customers[customerIndex].balance;
-        }
+        if(customerIndex !== -1) { customers[customerIndex].balance += amount; await saveToJSONBin(); return customers[customerIndex].balance; }
         return null;
     }
     
-    // Tabloyu render et
     function renderOrdersTable() {
         const tbody = document.getElementById('ordersList');
         const statusMap = {
@@ -297,51 +325,26 @@
             'teslim': { text: '🏠 Teslim Edildi', class: 'status-delivered' },
             'iptal': { text: '❌ İptal Edildi', class: 'status-cancelled' }
         };
-        
         tbody.innerHTML = orders.map(order => `
-            <tr>
-                <td><span class="tracking-code">${order.trackingCode}</span></td>
-                <td>${order.customerName}</td>
-                <td>${order.product}</td>
-                <td>${order.amount.toFixed(2)} ₺</td>
-                <td><span class="order-status ${statusMap[order.status]?.class || 'status-pending'}">${statusMap[order.status]?.text || order.status}</span></td>
-                <td><button class="update-status-btn" data-id="${order.id}" style="padding: 5px 10px; font-size: 12px;"><i class="fas fa-edit"></i> Durum</button></td>
-            </tr>
+            <tr><td><span class="tracking-code">${order.trackingCode}</span></td>
+            <td>${order.customerName}</td><td>${order.product}</td>
+            <td>${order.amount.toFixed(2)} ₺</td>
+            <td><span class="order-status ${statusMap[order.status]?.class || 'status-pending'}">${statusMap[order.status]?.text || order.status}</span></td>
+            <td><button class="update-status-btn" data-id="${order.id}" style="padding: 5px 10px; font-size: 12px;"><i class="fas fa-edit"></i> Durum</button></td></tr>
         `).join('');
-        
-        document.querySelectorAll('.update-status-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const orderId = parseInt(btn.dataset.id);
-                window.currentOrderId = orderId;
-                document.getElementById('statusModal').style.display = 'flex';
-            });
-        });
+        document.querySelectorAll('.update-status-btn').forEach(btn => { btn.addEventListener('click', () => { window.currentOrderId = parseInt(btn.dataset.id); document.getElementById('statusModal').style.display = 'flex'; }); });
     }
     
-    // Müşteri ara
     function searchAndShowCustomer() {
         const searchTerm = document.getElementById('searchCustomer').value.toLowerCase();
         const customer = customers.find(c => c.name.toLowerCase().includes(searchTerm) || c.contact.includes(searchTerm));
         const infoDiv = document.getElementById('customerInfo');
-        
         if(customer) {
-            infoDiv.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <strong><i class="fas fa-user"></i> ${customer.name}</strong><br>
-                        <small>${customer.contact}</small><br>
-                        <span class="balance">💰 Bakiye: ${customer.balance.toFixed(2)} ₺</span>
-                    </div>
-                    <button id="selectCustomerBtn" data-id="${customer.id}" class="btn-success" style="padding: 8px 15px;">Seç</button>
-                </div>
-            `;
-            document.getElementById('selectCustomerBtn')?.addEventListener('click', () => {
-                document.getElementById('custName').value = customer.name;
-                document.getElementById('custContact').value = customer.contact;
-            });
-        } else {
-            infoDiv.innerHTML = `<p>❌ Müşteri bulunamadı. Yeni sipariş oluşturarak kaydedebilirsiniz.</p>`;
-        }
+            infoDiv.innerHTML = `<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div><strong><i class="fas fa-user"></i> ${customer.name}</strong><br><small>${customer.contact}</small><br><span style="color:#27ae60; font-weight:800;">💰 Bakiye: ${customer.balance.toFixed(2)} ₺</span></div>
+                <button id="selectCustomerBtn" data-id="${customer.id}" class="btn-success" style="padding: 8px 15px;">Seç</button></div>`;
+            document.getElementById('selectCustomerBtn')?.addEventListener('click', () => { document.getElementById('custName').value = customer.name; document.getElementById('custContact').value = customer.contact; });
+        } else { infoDiv.innerHTML = `<p>❌ Müşteri bulunamadı.</p>`; }
     }
     
     // Event Listeners
@@ -351,73 +354,34 @@
         const product = document.getElementById('productName').value.trim();
         const amount = parseFloat(document.getElementById('orderAmount').value);
         const estimatedDays = parseInt(document.getElementById('estimatedDays').value);
-        const useDiscount = document.getElementById('useDiscount').value === '1';
-        
-        if(!name || !contact || !product || isNaN(amount)) {
-            alert('Lütfen tüm alanları doldurun!');
-            return;
-        }
-        
+        if(!name || !contact || !product || isNaN(amount)) { alert("Tüm alanları doldurun!"); return; }
         const customer = findOrCreateCustomer(name, contact);
-        const { newOrder, discountApplied } = await createOrder(customer, product, amount, estimatedDays, useDiscount);
-        
+        const { newOrder, discountApplied } = await createOrder(customer, product, amount, estimatedDays, false);
         const resultDiv = document.getElementById('orderResult');
         resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
-            <i class="fas fa-check-circle"></i> Sipariş oluşturuldu!<br>
-            <strong>🔑 Takip Kodu:</strong> <span style="font-family: monospace; font-size: 16px;">${newOrder.trackingCode}</span><br>
-            <strong>📦 Ürün:</strong> ${product}<br>
-            <strong>💰 Tutar:</strong> ${newOrder.amount.toFixed(2)} ₺
-            ${discountApplied > 0 ? `<br><strong>🎉 İndirim:</strong> ${discountApplied.toFixed(2)} ₺ (bakiye kullanıldı)` : ''}<br>
-            <button id="copyTrackingBtn" style="margin-top: 10px;"><i class="fas fa-copy"></i> Kodu Kopyala</button>
-        `;
-        
-        document.getElementById('copyTrackingBtn')?.addEventListener('click', () => {
-            navigator.clipboard.writeText(newOrder.trackingCode);
-            alert('Takip kodu kopyalandı!');
-        });
-        
+        resultDiv.innerHTML = `<i class="fas fa-check-circle"></i> Sipariş oluşturuldu!<br><strong>🔑 Takip Kodu:</strong> <span style="font-family: monospace;">${newOrder.trackingCode}</span><br><strong>📦 Ürün:</strong> ${product}<br><strong>💰 Tutar:</strong> ${newOrder.amount.toFixed(2)} ₺<br><button id="copyTrackingBtn" style="margin-top:10px;"><i class="fas fa-copy"></i> Kodu Kopyala</button>`;
+        document.getElementById('copyTrackingBtn')?.addEventListener('click', () => { navigator.clipboard.writeText(newOrder.trackingCode); alert("Kopyalandı!"); });
         renderOrdersTable();
-        document.getElementById('custName').value = '';
-        document.getElementById('custContact').value = '';
-        document.getElementById('productName').value = '';
-        document.getElementById('orderAmount').value = '';
+        document.getElementById('custName').value = ''; document.getElementById('custContact').value = ''; document.getElementById('productName').value = ''; document.getElementById('orderAmount').value = '';
     });
     
     document.getElementById('addBalanceBtn').addEventListener('click', async () => {
         const name = document.getElementById('custName').value.trim();
-        if(!name) { alert('Lütfen önce bir müşteri seçin'); return; }
+        if(!name) { alert("Müşteri seçin!"); return; }
         const customer = customers.find(c => c.name.toLowerCase() === name.toLowerCase());
-        if(!customer) { alert('Müşteri bulunamadı!'); return; }
+        if(!customer) { alert("Müşteri bulunamadı!"); return; }
         const amount = parseFloat(prompt(`Müşteri ${customer.name} için eklenecek bakiye (₺):`));
-        if(!isNaN(amount) && amount > 0) {
-            const newBalance = await addBalance(customer.id, amount);
-            alert(`✅ ${amount} ₺ bakiye eklendi! Yeni bakiye: ${newBalance} ₺`);
-            searchAndShowCustomer();
-        }
+        if(!isNaN(amount) && amount > 0) { const newBalance = await addBalance(customer.id, amount); alert(`✅ ${amount} ₺ eklendi! Yeni bakiye: ${newBalance} ₺`); searchAndShowCustomer(); }
     });
     
-    document.getElementById('refreshDataBtn').addEventListener('click', async () => {
-        await loadFromJSONBin();
-        searchAndShowCustomer();
-        renderOrdersTable();
-    });
-    
+    document.getElementById('refreshDataBtn').addEventListener('click', () => { loadFromJSONBin(); searchAndShowCustomer(); });
     document.getElementById('searchCustomer').addEventListener('input', searchAndShowCustomer);
-    
     document.getElementById('updateStatusBtn').addEventListener('click', async () => {
         const newStatus = document.getElementById('newStatus').value;
-        if(window.currentOrderId && await updateOrderStatus(window.currentOrderId, newStatus)) {
-            document.getElementById('statusModal').style.display = 'none';
-            alert('Sipariş durumu güncellendi!');
-        }
+        if(window.currentOrderId && await updateOrderStatus(window.currentOrderId, newStatus)) { document.getElementById('statusModal').style.display = 'none'; alert("Durum güncellendi!"); }
     });
+    document.getElementById('closeStatusModal').addEventListener('click', () => { document.getElementById('statusModal').style.display = 'none'; });
     
-    document.getElementById('closeStatusModal').addEventListener('click', () => {
-        document.getElementById('statusModal').style.display = 'none';
-    });
-    
-    // Başlangıç
     loadFromJSONBin();
 </script>
 </body>
